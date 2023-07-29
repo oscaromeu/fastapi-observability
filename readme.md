@@ -53,7 +53,7 @@ Observe the FastAPI application with three pillars of observability on [Grafana]
    bash request-script.sh
    bash trace.sh
    ```
-
+ 
    Or you can use [Locust](https://locust.io/) to send requests:
 
    ```bash
