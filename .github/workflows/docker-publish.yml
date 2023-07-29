@@ -21,9 +21,6 @@ jobs:
   push_to_registries:
     name: Push Docker image to multiple registries
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: './fastapi_app/'
     permissions:
       packages: write
       contents: read
@@ -55,7 +52,7 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v4
         with:
-          context: "{{defaultContext}}:src"
+          context: "./fastapi_app"
           push: ${{ github.event_name != 'pull_request' }} # Don't push on PR
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
