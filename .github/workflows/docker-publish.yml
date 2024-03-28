@@ -69,4 +69,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          cache-to: ype=registry,ref=${{ fromJSON(steps.meta.outputs.json).tags[0] }},mode=max,image-manifest=true
+          cache-to: type=registry,ref=${{ fromJSON(steps.meta.outputs.json).tags[0] }},mode=max,image-manifest=true
