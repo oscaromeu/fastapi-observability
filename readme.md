@@ -21,6 +21,7 @@ Observe the FastAPI application with three pillars of observability on [Grafana]
       - [Traces and Logs](#traces-and-logs)
       - [Span Inject](#span-inject)
       - [Metrics](#metrics)
+      - [OpenTelemetry Instrumentation](#opentelemetry-instrumentation)
     - [Prometheus - Metrics](#prometheus---metrics)
       - [Prometheus Config](#prometheus-config)
       - [Grafana Data Source](#grafana-data-source)
@@ -40,11 +41,16 @@ Observe the FastAPI application with three pillars of observability on [Grafana]
    docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
    ```
 
-2. Build application image and start all services with docker-compose
+2. Start all services with docker-compose
 
    ```bash
-   docker-compose build
    docker-compose up -d
+   ```
+
+   If got the error message `Error response from daemon: error looking up logging plugin loki: plugin loki found but disabled`, please run the following command to enable the plugin:
+
+   ```bash
+   docker plugin enable loki
    ```
 
 3. Send requests with [siege](https://linux.die.net/man/1/siege) and curl to the FastAPI app
@@ -61,7 +67,13 @@ Observe the FastAPI application with three pillars of observability on [Grafana]
    locust -f locustfile.py --headless --users 10 --spawn-rate 1 -H http://localhost:8000
    ```
 
-4. Check predefined dashboard `FastAPI Observability` on Grafana [http://localhost:3000/](http://localhost:3000/)
+   Or you can send requests with [k6](https://k6.io/):
+
+   ```bash
+   k6 run --vus 1 --duration 300s k6-script.js
+   ```
+
+4. Check predefined dashboard `FastAPI Observability` on Grafana [http://localhost:3000/](http://localhost:3000/) login with `admin:admin`
 
    Dashboard screenshot:
 
@@ -172,6 +184,26 @@ async def chain(response: Response):
     return {"path": "/chain"}
 ```
 
+Alternatively, we can use the [instrumentation library for HTTPX](https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation/opentelemetry-instrumentation-httpx) to instrument HTTPX. Following is the example of using OpenTelemetry HTTPX Instrumentation which will automatically inject trace info to the header.
+
+```py
+import httpx
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+
+HTTPXClientInstrumentor().instrument()
+
+@app.get("/chain")
+async def chain(response: Response):
+    async with httpx.AsyncClient() as client:
+        await client.get(f"http://localhost:8000/")
+    async with httpx.AsyncClient() as client:
+        await client.get(f"http://{TARGET_ONE_HOST}:8000/io_task")
+    async with httpx.AsyncClient() as client:
+        await client.get(f"http://{TARGET_TWO_HOST}:8000/cpu_task")
+
+    return {"path": "/chain"}
+```
+
 #### Metrics
 
 Use [Prometheus Python Client](https://github.com/prometheus/client_python) to generate OpenTelemetry format metric with [exemplars](https://github.com/prometheus/client_python#exemplars) and expose on `/metrics` for Prometheus.
@@ -215,6 +247,13 @@ def metrics(request: Request) -> Response:
 Metrics with exemplars
 
 ![Metrics With Exemplars](./images/metrics-with-exemplars.png)
+
+#### OpenTelemetry Instrumentation
+
+There are two methods to add trace information to spans and logs using the OpenTelemetry Python SDK:
+
+1. [Manual Instrumentation](https://opentelemetry.io/docs/instrumentation/python/manual/): This involves adding trace information to spans, logs, and metrics using the OpenTelemetry Python SDK. It requires more coding effort but allows for the addition of exemplars to metrics. We employ this approach in this project.
+2. [Automatic Instrumentation](https://opentelemetry.io/docs/instrumentation/python/automatic/): This method automatically instruments a Python application using instrumentation libraries, but only when the used [frameworks and libraries](https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation#readme) are supported. It simplifies the process by eliminating the need for manual code changes. However, it does not allow for the addition of exemplars to metrics. For more insights into automatic instrumentation, refer to my other project, [OpenTelemetry APM](https://github.com/blueswen/opentelemetry-apm?tab=readme-ov-file#python---fastapi).
 
 ### Prometheus - Metrics
 
@@ -386,7 +425,7 @@ editable: true
 ```yaml
 # grafana in docker-compose.yaml
 grafana:
-   image: grafana/grafana:10.0.2
+   image: grafana/grafana:10.2.3
    volumes:
       - ./etc/grafana/:/etc/grafana/provisioning/datasources # data sources
       - ./etc/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml # dashboard setting
