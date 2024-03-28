@@ -68,5 +68,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }} # Don't push on PR
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          cache-to: inline
+          cache-from: type=registry,ref=${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          cache-to: ype=registry,ref=${{ fromJSON(steps.meta.outputs.json).tags[0] }},mode=max,image-manifest=true
