@@ -24,7 +24,7 @@ on:
 jobs:
   build:
     name: Push Docker image to multiple registries
-    runs-on: ubuntu-latest
+    runs-on: self-hosted-cache
     permissions:
       packages: write
       contents: read
@@ -79,7 +79,7 @@ jobs:
           path: /tmp/fastapi_app.tar
         
   use:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted-cache
     needs: build
     steps:
       -
