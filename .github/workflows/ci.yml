@@ -24,7 +24,7 @@ on:
 jobs:
   build:
     name: Push Docker image to multiple registries
-    runs-on: self-hosted-cache
+    runs-on: fastapi-observability
     permissions:
       packages: write
       contents: read
