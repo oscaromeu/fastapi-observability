@@ -79,7 +79,7 @@ jobs:
           path: /tmp/fastapi_app.tar
         
   use:
-    runs-on: self-hosted-cache
+    runs-on: fastapi-observability
     needs: build
     steps:
       -
