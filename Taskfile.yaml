@@ -1,0 +1,17 @@
+---
+version: '3'
+
+set: [pipefail]
+
+vars:
+  ROOT_DIR:
+    sh: git rev-parse --show-toplevel
+
+includes:
+  docker: .taskfiles/docker
+  k6: .taskfiles/k6
+
+tasks:
+  default:
+    silent: true
+    cmd: task --list

@@ -1,22 +1,58 @@
 x-logging: &default-logging
-  driver: loki
+  driver: fluentd
   options:
-    loki-url: 'http://localhost:3100/api/prom/push'
-    loki-pipeline-stages: |
-      - multiline:
-          firstline: '^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}'
-          max_wait_time: 3s
-      - regex:
-          expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},\d{3}) (?P<message>(?s:.*))$$'
-
-version: "3.4"
+    fluentd-address: "localhost:24224"
+    fluentd-async: "true"
+    tag: "docker.{{.Name}}"
 
 services:
-  loki:
-    image: grafana/loki:3.0.0
-    command: -config.file=/etc/loki/local-config.yaml
+  victoria-logs:
+    image: victoriametrics/victoria-logs:v1.49.0
+    command:
+      - -storageDataPath=/vlogs
+      - -loggerFormat=json
+      - -retentionPeriod=7d
     ports:
-      - "3100:3100"
+      - "9428:9428"
+    volumes:
+      - victoria-logs-data:/vlogs
+
+  fluentbit:
+    image: cr.fluentbit.io/fluent/fluent-bit:4.0.2
+    command:
+      - --config=/fluent-bit/etc/fluent-bit.yaml
+    ports:
+      - "24224:24224"
+    volumes:
+      - ./config/fluentbit:/fluent-bit/etc
+    depends_on:
+      - victoria-logs
+
+  victoria-traces:
+    image: victoriametrics/victoria-traces:v0.8.0
+    command:
+      - -storageDataPath=/vtraces
+      - -loggerFormat=json
+    ports:
+      - "10428:10428"
+    depends_on:
+      - fluentbit
+    volumes:
+      - victoria-traces-data:/vtraces
+    logging: *default-logging
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.140.1
+    command:
+      - --config=/conf/collector.yaml
+    ports:
+      - "4317:4317"
+      - "8888:8888"
+    volumes:
+      - ./config/otel:/conf
+    depends_on:
+      - victoria-traces
+    logging: *default-logging
 
   app-a:
     # build: ./fastapi_app/
@@ -24,9 +60,11 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - loki
+      - fluentbit
+      - otel-collector
     environment:
       APP_NAME: "app-a"
+      OTLP_GRPC_ENDPOINT: "http://otel-collector:4317"
     logging: *default-logging
 
   app-b:
@@ -35,9 +73,11 @@ services:
     ports:
       - "8001:8000"
     depends_on:
-      - loki
+      - fluentbit
+      - otel-collector
     environment:
       APP_NAME: "app-b"
+      OTLP_GRPC_ENDPOINT: "http://otel-collector:4317"
     logging: *default-logging
 
   app-c:
@@ -46,9 +86,11 @@ services:
     ports:
       - "8002:8000"
     depends_on:
-      - loki
+      - fluentbit
+      - otel-collector
     environment:
       APP_NAME: "app-c"
+      OTLP_GRPC_ENDPOINT: "http://otel-collector:4317"
     logging: *default-logging
 
   prometheus:
@@ -56,33 +98,29 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./etc/prometheus:/workspace
+      - ./config/prometheus:/workspace
     command:
       - --config.file=/workspace/prometheus.yml
       - --enable-feature=exemplar-storage
     depends_on:
-      - loki
-    logging: *default-logging
-
-  tempo:
-    image: grafana/tempo:2.4.1
-    command: [ "--target=all", "--storage.trace.backend=local", "--storage.trace.local.path=/var/tempo", "--auth.enabled=false" ]
-    ports:
-      - "4317:4317"
-      - "4318:4318"
-    depends_on:
-      - loki
+      - fluentbit
     logging: *default-logging
 
   grafana:
-    image: grafana/grafana:10.4.2
+    image: grafana/grafana:12.4.0
     ports:
       - "3000:3000"
+    environment:
+      GF_INSTALL_PLUGINS: victoriametrics-logs-datasource
     volumes:
-      - ./etc/grafana/:/etc/grafana/provisioning/datasources
-      - ./etc/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
-      - ./etc/dashboards:/etc/grafana/dashboards
+      - ./config/grafana/:/etc/grafana/provisioning/datasources
+      - ./config/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./config/dashboards:/etc/grafana/dashboards
     depends_on:
-      - loki
+      - fluentbit
       - prometheus
     logging: *default-logging
+
+volumes:
+  victoria-logs-data:
+  victoria-traces-data:

@@ -1,0 +1,28 @@
+---
+version: '3'
+
+tasks:
+  up:
+    desc: Start all services
+    cmd: docker compose up -d
+    dir: "{{.ROOT_DIR}}"
+
+  down:
+    desc: Stop all services and remove volumes
+    cmd: docker compose down -v
+    dir: "{{.ROOT_DIR}}"
+
+  restart:
+    desc: Restart all services
+    cmd: docker compose restart
+    dir: "{{.ROOT_DIR}}"
+
+  logs:
+    desc: Tail logs from all services
+    cmd: docker compose logs -f
+    dir: "{{.ROOT_DIR}}"
+
+  ps:
+    desc: Show running services
+    cmd: docker compose ps
+    dir: "{{.ROOT_DIR}}"

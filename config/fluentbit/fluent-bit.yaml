@@ -1,0 +1,19 @@
+service:
+  flush: 1
+  log_level: info
+
+pipeline:
+  inputs:
+    - name: forward
+      listen: 0.0.0.0
+      port: 24224
+      tag: docker
+
+  outputs:
+    - name: http
+      match: "*"
+      host: victoria-logs
+      port: 9428
+      uri: "/insert/jsonline?_stream_fields=container_name&_msg_field=log&_time_field=date"
+      format: json_lines
+      json_date_format: iso8601

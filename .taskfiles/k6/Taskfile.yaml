@@ -1,0 +1,51 @@
+---
+version: '3'
+
+vars:
+  RESOURCES_DIR: "{{.ROOT_DIR}}/.taskfiles/k6/resources"
+
+tasks:
+  load:
+    desc: Run quick k6 load test against all apps
+    cmd: k6 run {{.RESOURCES_DIR}}/k6-script.js
+    preconditions:
+      - msg: k6 not found, run 'mise install'
+        sh: command -v k6
+
+  load-app:
+    desc: Run k6 load test against a single app
+    summary: |
+      Run k6 load test against a single app.
+
+      Vars:
+        APP: app name (app-a, app-b, app-c)
+        PORT: app port (default: 8000)
+        VUS: virtual users (default: 10)
+        DURATION: test duration (default: 1m)
+    cmd: k6 run --vus {{.VUS}} --duration {{.DURATION}} -e BASE_URL=http://localhost:{{.PORT}} {{.RESOURCES_DIR}}/k6-load.js
+    requires:
+      vars: [APP]
+    vars:
+      PORT: '{{.PORT | default "8000"}}'
+      VUS: '{{.VUS | default "10"}}'
+      DURATION: '{{.DURATION | default "1m"}}'
+    preconditions:
+      - msg: k6 not found, run 'mise install'
+        sh: command -v k6
+
+  load-all:
+    desc: Run k6 load test against all 3 apps in parallel
+    deps:
+      - task: load-app
+        vars: { APP: app-a, PORT: "8000" }
+      - task: load-app
+        vars: { APP: app-b, PORT: "8001" }
+      - task: load-app
+        vars: { APP: app-c, PORT: "8002" }
+
+  staged:
+    desc: Run staged load test (ramp up/hold/ramp down) against all apps
+    cmd: k6 run {{.RESOURCES_DIR}}/k6-staged.js
+    preconditions:
+      - msg: k6 not found, run 'mise install'
+        sh: command -v k6

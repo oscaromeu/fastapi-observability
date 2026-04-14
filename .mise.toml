@@ -1,0 +1,3 @@
+[tools]
+"aqua:go-task/task" = "3.49.1"
+"aqua:grafana/k6" = "latest"

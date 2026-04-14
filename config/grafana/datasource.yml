@@ -1,0 +1,53 @@
+# config file version
+apiVersion: 1
+
+deleteDatasources:
+  - { name: Prometheus, orgId: 1 }
+  - { name: VictoriaTraces, orgId: 1 }
+  - { name: VictoriaLogs, orgId: 1 }
+
+datasources:
+  - uid: prometheus
+    orgId: 1
+    name: Prometheus
+    type: prometheus
+    typeName: Prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      httpMethod: POST
+      exemplarTraceIdDestinations:
+        - datasourceUid: victoria-traces
+          name: TraceID
+  - uid: victoria-traces
+    orgId: 1
+    name: VictoriaTraces
+    type: jaeger
+    typeName: Jaeger
+    access: proxy
+    url: http://victoria-traces:10428/select/jaeger
+    isDefault: false
+    editable: true
+    jsonData:
+      tracesToLogs:
+        datasourceUid: victoria-logs
+        filterByTraceID: true
+        filterBySpanID: false
+        customQuery: true
+        query: "\"$${__trace.traceId}\""
+  - uid: victoria-logs
+    orgId: 1
+    name: VictoriaLogs
+    type: victoriametrics-logs-datasource
+    access: proxy
+    url: http://victoria-logs:9428
+    isDefault: false
+    editable: true
+    jsonData:
+      derivedFields:
+        - datasourceUid: victoria-traces
+          matcherRegex: "trace_id=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"

@@ -1,0 +1,66 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch:
+  probabilistic_sampler: {}
+  attributes/unsample:
+    actions:
+      - key: sampling.priority
+        value: 1
+        action: insert
+  attributes/sample-out-http-response-start:
+    include:
+      match_type: strict
+      attributes:
+        - key: type
+          value: http.response.start
+    actions:
+      - key: sampling.priority
+        action: delete
+  attributes/sample-out-http-response-body:
+    include:
+      match_type: strict
+      attributes:
+        - key: type
+          value: http.response.body
+    actions:
+      - key: sampling.priority
+        action: delete
+  attributes/sample-out-http-request:
+    include:
+      match_type: strict
+      attributes:
+        - key: type
+          value: http.request
+    actions:
+      - key: sampling.priority
+        action: delete
+
+exporters:
+  otlphttp/victoriatraces:
+      endpoint: "http://victoria-traces:10428/insert/opentelemetry"
+
+service:
+  telemetry:
+    metrics:
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: 0.0.0.0
+                port: 8888
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors:
+        - attributes/unsample
+        - attributes/sample-out-http-response-start
+        - attributes/sample-out-http-response-body
+        - attributes/sample-out-http-request
+        - probabilistic_sampler
+        - batch
+      exporters: [otlphttp/victoriatraces]
