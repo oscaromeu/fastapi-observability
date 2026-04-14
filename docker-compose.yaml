@@ -7,7 +7,7 @@ x-logging: &default-logging
 
 services:
   victoria-logs:
-    image: victoriametrics/victoria-logs:v1.49.0
+    image: victoriametrics/victoria-logs:v1.49.0@sha256:d0c8441ca886e055c519daa89fb0a399bfdc0908fe85700d603beb2126d714c6
     command:
       - -storageDataPath=/vlogs
       - -loggerFormat=json
@@ -18,7 +18,7 @@ services:
       - victoria-logs-data:/vlogs
 
   fluentbit:
-    image: cr.fluentbit.io/fluent/fluent-bit:4.0.2
+    image: cr.fluentbit.io/fluent/fluent-bit:4.0.2@sha256:c55eb806ca4a55f42a235d0aa8b893b0548dbc4c06b9da037a56ac1dd5bde156
     command:
       - --config=/fluent-bit/etc/fluent-bit.yaml
     ports:
@@ -29,7 +29,7 @@ services:
       - victoria-logs
 
   victoria-traces:
-    image: victoriametrics/victoria-traces:v0.8.0
+    image: victoriametrics/victoria-traces:v0.8.0@sha256:b00d788b51a8f6c16b5e4cb5d94649e6b8a4c76ba9db8ac11d8b151198b06129
     command:
       - -storageDataPath=/vtraces
       - -loggerFormat=json
@@ -42,7 +42,7 @@ services:
     logging: *default-logging
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.140.1
+    image: otel/opentelemetry-collector-contrib:0.140.1@sha256:5901567d6f684547bafee53f02403869b5655e13a4e0af65aa6ae9f6301075d9
     command:
       - --config=/conf/collector.yaml
     ports:
@@ -56,7 +56,7 @@ services:
 
   app-a:
     # build: ./fastapi_app/
-    image: ghcr.io/blueswen/fastapi-observability/app:latest
+    image: ghcr.io/oscaromeu/fastapi-observability/app:0.1.0@sha256:f087c724a0232efae75cda2fb3f1dfb5b2b4b61f0f8d667336855b123af11938
     ports:
       - "8000:8000"
     depends_on:
@@ -69,7 +69,7 @@ services:
 
   app-b:
     # build: ./fastapi_app/
-    image: ghcr.io/blueswen/fastapi-observability/app:latest
+    image: ghcr.io/oscaromeu/fastapi-observability/app:0.1.0@sha256:f087c724a0232efae75cda2fb3f1dfb5b2b4b61f0f8d667336855b123af11938
     ports:
       - "8001:8000"
     depends_on:
@@ -82,7 +82,7 @@ services:
 
   app-c:
     # build: ./fastapi_app/
-    image: ghcr.io/blueswen/fastapi-observability/app:latest
+    image: ghcr.io/oscaromeu/fastapi-observability/app:0.1.0@sha256:f087c724a0232efae75cda2fb3f1dfb5b2b4b61f0f8d667336855b123af11938
     ports:
       - "8002:8000"
     depends_on:
@@ -94,7 +94,7 @@ services:
     logging: *default-logging
 
   prometheus:
-    image: prom/prometheus:v2.51.2
+    image: prom/prometheus:v2.51.2@sha256:4f6c47e39a9064028766e8c95890ed15690c30f00c4ba14e7ce6ae1ded0295b1
     ports:
       - "9090:9090"
     volumes:
@@ -107,7 +107,7 @@ services:
     logging: *default-logging
 
   grafana:
-    image: grafana/grafana:12.4.0
+    image: grafana/grafana:12.4.0@sha256:b0ae311af06228bcfd4a620504b653db80f5b91e94dc3dc2a5b7dab202bcde20
     ports:
       - "3000:3000"
     environment:
