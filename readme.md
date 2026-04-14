@@ -72,10 +72,6 @@ Observe the FastAPI application with three pillars of observability on [Grafana]
 
 Grafana provides a great solution, which could observe specific actions in service between traces, metrics, and logs through trace ID and exemplar.
 
-![Observability Correlations](./docs/images/observability-correlations.jpeg)
-
-Image Source: [Grafana](https://grafana.com/blog/2021/03/31/intro-to-exemplars-which-enable-grafana-tempos-distributed-tracing-at-massive-scale/)
-
 ### Metrics to Traces
 
 Get Trace ID from an exemplar in metrics, then query in VictoriaTraces.
