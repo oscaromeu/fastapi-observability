@@ -3,8 +3,13 @@ version: '3'
 
 tasks:
   up:
-    desc: Start all services
-    cmd: docker compose up -d
+    desc: Start all services (pass `-- --build` to rebuild local images)
+    cmd: docker compose up -d {{.CLI_ARGS}}
+    dir: "{{.ROOT_DIR}}"
+
+  build:
+    desc: Build the local app image
+    cmd: docker compose build {{.CLI_ARGS}}
     dir: "{{.ROOT_DIR}}"
 
   down:

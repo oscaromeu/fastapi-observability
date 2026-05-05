@@ -112,6 +112,12 @@ services:
       - "3000:3000"
     environment:
       GF_INSTALL_PLUGINS: victoriametrics-logs-datasource
+      # Local-only: skip login. Anonymous Admin lets you edit dashboards without
+      # signing in. NEVER use these settings on a Grafana exposed off localhost.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_AUTH_BASIC_ENABLED: "false"
     volumes:
       - ./config/grafana/:/etc/grafana/provisioning/datasources
       - ./config/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml

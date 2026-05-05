@@ -1,0 +1,24 @@
+# Local development override.
+# docker compose auto-loads this file alongside docker-compose.yaml.
+# Activates `build: ./app` for the 3 fastapi services so `docker compose up
+# --build` rebuilds from local source instead of pulling the pinned upstream
+# image. Delete (or rename) this file to revert to the upstream pinned image.
+
+services:
+  app-a:
+    build: ./app
+    image: fastapi-observability-app:local
+    environment:
+      # Set 0.05 (5%) to inject synthetic failures into /checkout so the
+      # error-ratio panel demos with real data. Default 0.0 = behave normally.
+      CHECKOUT_ERROR_RATE: "0.05"
+  app-b:
+    build: ./app
+    image: fastapi-observability-app:local
+    environment:
+      CHECKOUT_ERROR_RATE: "0.05"
+  app-c:
+    build: ./app
+    image: fastapi-observability-app:local
+    environment:
+      CHECKOUT_ERROR_RATE: "0.05"
