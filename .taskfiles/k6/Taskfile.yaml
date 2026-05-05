@@ -34,14 +34,24 @@ tasks:
         sh: command -v k6
 
   load-all:
-    desc: Run k6 load test against all 3 apps in parallel
+    desc: Run k6 load test against all 3 apps in parallel (VUS/DURATION overridable)
+    summary: |
+      Vars (forwarded to each app's load-app):
+        VUS: virtual users per app (default: 10)
+        DURATION: test duration (default: 1m)
+
+      Example:
+        task k6:load-all VUS=50 DURATION=10m
+    vars:
+      VUS: '{{.VUS | default "10"}}'
+      DURATION: '{{.DURATION | default "1m"}}'
     deps:
       - task: load-app
-        vars: { APP: app-a, PORT: "8000" }
+        vars: { APP: app-a, PORT: "8000", VUS: '{{.VUS}}', DURATION: '{{.DURATION}}' }
       - task: load-app
-        vars: { APP: app-b, PORT: "8001" }
+        vars: { APP: app-b, PORT: "8001", VUS: '{{.VUS}}', DURATION: '{{.DURATION}}' }
       - task: load-app
-        vars: { APP: app-c, PORT: "8002" }
+        vars: { APP: app-c, PORT: "8002", VUS: '{{.VUS}}', DURATION: '{{.DURATION}}' }
 
   staged:
     desc: Run staged load test (ramp up/hold/ramp down) against all apps
