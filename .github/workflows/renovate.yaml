@@ -66,6 +66,9 @@ jobs:
           RENOVATE_INTERNAL_CHECKS_FILTER: strict
           RENOVATE_PLATFORM: github
           RENOVATE_PLATFORM_COMMIT: true
+          # Process forks; default skips them. Must be a global env var, not in
+          # .renovaterc.json5, because the fork check runs before repo config is read.
+          RENOVATE_FORK_PROCESSING: "enabled"
         with:
           token: "${{ steps.app-token.outputs.token }}"
           renovate-version: "${{ inputs.version || 'latest' }}"
