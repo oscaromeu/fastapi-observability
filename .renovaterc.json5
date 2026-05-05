@@ -11,7 +11,9 @@
   ],
   dependencyDashboard: true,
   dependencyDashboardTitle: "Renovate Dashboard :robot:",
-  schedule: ["every weekend"],
+  // This repo is a fork of blueswen/fastapi-observability — Renovate skips
+  // forks by default; opt in explicitly so it processes our fork.
+  forkProcessing: "enabled",
   packageRules: [
     {
       description: "Auto-merge GitHub Actions",
