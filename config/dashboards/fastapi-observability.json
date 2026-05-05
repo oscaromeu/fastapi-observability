@@ -28,6 +28,19 @@
   "liveNow": false,
   "panels": [
     {
+      "type": "row",
+      "title": "RED Metrics",
+      "id": 23,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -52,7 +65,7 @@
         "h": 6,
         "w": 4,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 4,
       "options": {
@@ -89,6 +102,7 @@
         }
       ],
       "timeFrom": "24h",
+      "description": "Cumulative number of HTTP requests received by the selected app since the process started, excluding the /metrics scrape endpoint. Resets on restart. Useful as a sanity check that traffic is flowing.",
       "title": "Total Requests",
       "transformations": [
         {
@@ -134,7 +148,7 @@
         "h": 6,
         "w": 8,
         "x": 4,
-        "y": 0
+        "y": 1
       },
       "id": 16,
       "options": {
@@ -171,6 +185,7 @@
         }
       ],
       "timeFrom": "24h",
+      "description": "Per-path HTTP request counter for the selected app, broken down by method and path. Lets you see which endpoints are being hit and how often.",
       "title": "Requests Count",
       "transformations": [
         {
@@ -231,7 +246,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 1
       },
       "id": 6,
       "options": {
@@ -266,6 +281,7 @@
           "refId": "A"
         }
       ],
+      "description": "Average request duration in seconds per path (sum / count of the request-duration histogram). Quick view of which endpoints are slow on average; for tail latency look at p99 instead — averages hide outliers.",
       "title": "Requests Average Duration",
       "type": "bargauge"
     },
@@ -300,7 +316,7 @@
         "h": 7,
         "w": 4,
         "x": 0,
-        "y": 6
+        "y": 7
       },
       "id": 22,
       "options": {
@@ -334,6 +350,7 @@
         }
       ],
       "timeFrom": "24h",
+      "description": "Total unhandled exceptions raised by the app since process start. A non-zero or rising value usually points at a bug or a downstream failure that the app isn't catching.",
       "title": "Total Exceptions",
       "type": "stat"
     },
@@ -402,7 +419,7 @@
         "h": 7,
         "w": 10,
         "x": 4,
-        "y": 6
+        "y": 7
       },
       "id": 18,
       "options": {
@@ -430,6 +447,7 @@
           "refId": "A"
         }
       ],
+      "description": "Per-path success rate: fraction of responses with a 2xx status code over total responses. The complement of the error rate — drops here are a strong signal that something is failing.",
       "title": "Percent of 2xx Requests",
       "type": "timeseries"
     },
@@ -498,7 +516,7 @@
         "h": 7,
         "w": 10,
         "x": 14,
-        "y": 6
+        "y": 7
       },
       "id": 20,
       "options": {
@@ -526,6 +544,7 @@
           "refId": "A"
         }
       ],
+      "description": "Per-path server-error rate: fraction of responses with a 5xx status code. Good candidate for an SLO and alerts — sustained values above 0 mean the app is failing requests.",
       "title": "Percent of 5xx Requests",
       "type": "timeseries"
     },
@@ -593,7 +612,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 13
+        "y": 14
       },
       "id": 8,
       "options": {
@@ -621,6 +640,7 @@
           "refId": "A"
         }
       ],
+      "description": "p99 of request duration per path, computed from the histogram bucket rates over a 1-minute window. The 'tail latency' view: it captures the slowest 1% of requests, which is what end users actually feel when something is wrong.",
       "title": "PR 99 Requests Duration",
       "type": "timeseries"
     },
@@ -687,7 +707,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 13
+        "y": 14
       },
       "id": 10,
       "options": {
@@ -715,6 +735,7 @@
           "refId": "A"
         }
       ],
+      "description": "Number of HTTP requests currently being processed by the app, per path (gauge). A growing in-flight count usually means downstream calls are blocking or the app is overwhelmed — check it alongside latency.",
       "title": "Request In Process",
       "type": "timeseries"
     },
@@ -782,7 +803,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 13
+        "y": 14
       },
       "id": 12,
       "options": {
@@ -810,8 +831,535 @@
           "refId": "A"
         }
       ],
+      "description": "Requests per second over a 1-minute window. The basic 'is traffic flowing?' chart — also useful to compare baseline RPS before and after deploys.",
       "title": "Request Per Sec",
       "type": "timeseries"
+    },
+    {
+      "type": "row",
+      "title": "Business Metrics",
+      "id": 24,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 23
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(shop_checkouts_total[1m]))",
+          "legendFormat": "checkouts rps",
+          "refId": "A"
+        }
+      ],
+      "description": "Successful + failed checkouts per second across all 3 app instances, averaged over a 1-minute window. The single-number answer to 'are people buying right now?'.",
+      "title": "Checkout RPS (all apps)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 23
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(shop_checkouts_in_progress)",
+          "legendFormat": "in flight",
+          "refId": "A"
+        }
+      ],
+      "description": "Number of /checkout requests currently mid-flight across all apps (gauge — sums shop_checkouts_in_progress). Spikes here mean concurrency is climbing; pair with latency to spot saturation.",
+      "title": "Checkouts In-Flight (all apps)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 23
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(shop_checkouts_total{outcome=\"error\"}[5m])) / clamp_min(sum(rate(shop_checkouts_total[5m])), 0.0001)",
+          "legendFormat": "error ratio",
+          "refId": "A"
+        }
+      ],
+      "description": "Fraction of checkouts that ended with outcome=error over the last 5 minutes (errors / total). The clamp_min in the denominator avoids divide-by-zero at startup. With CHECKOUT_ERROR_RATE=0.05 in the override file you should see ~5%.",
+      "title": "Checkout Error Ratio (5m)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.50, sum(rate(shop_checkout_duration_seconds_bucket[1m])) by (le, app_name))",
+          "exemplar": true,
+          "legendFormat": "p50 {{app_name}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum(rate(shop_checkout_duration_seconds_bucket[1m])) by (le, app_name))",
+          "exemplar": true,
+          "legendFormat": "p99 {{app_name}}",
+          "refId": "B"
+        }
+      ],
+      "description": "Median (p50) and p99 latency of /checkout, split by app instance. Each point carries a trace_id exemplar \u2014 click any spike to jump straight to the matching trace in VictoriaTraces. This is the whole point of histograms with exemplars: from 'something was slow' to 'this exact request' in one click.",
+      "title": "Checkout Duration p50 / p99 (with exemplars \u2192 trace)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(shop_checkouts_total[1m])) by (app_name, outcome)",
+          "legendFormat": "{{app_name}} / {{outcome}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Per-second rate of checkouts split by app instance and outcome (success / error). Lets you see if one specific app is failing while the others are fine — a classic 'one bad pod' signal.",
+      "title": "Checkouts by Outcome",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(shop_jobs_finished_total[1m])) by (job_type)",
+          "legendFormat": "{{job_type}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Rate at which the two background jobs complete: 'charge' (I/O-bound — simulates calling the payment provider) and 'tax' (CPU-bound — simulates computing tax/discounts). If 'charge' rate drops while checkout RPS stays the same, the payment provider is probably slow.",
+      "title": "Jobs Finished per Second (charge / tax)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(shop_product_views_total[1m])) by (tier)",
+          "legendFormat": "tier={{tier}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Rate of /products/{id} lookups bucketed by price tier (cheap / mid / premium). The 'tier' label is computed from product_id in code — a deliberate example of cardinality bounding: never put a literal product_id as a label, group it into a small fixed set first or you'll melt Prometheus.",
+      "title": "Product Views per Second (by price tier)",
+      "type": "timeseries"
+    },
+    {
+      "type": "row",
+      "title": "Logs",
+      "id": 25,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "collapsed": false,
+      "panels": []
     },
     {
       "datasource": {
@@ -922,7 +1470,7 @@
         "h": 9,
         "w": 6,
         "x": 0,
-        "y": 21
+        "y": 44
       },
       "id": 14,
       "options": {
@@ -955,6 +1503,7 @@
           "refId": "A"
         }
       ],
+      "description": "Distribution of log levels (INFO / WARNING / ERROR / CRITICAL) emitted by the 3 app containers, optionally filtered by $log_keyword. A spike in ERROR or CRITICAL is your fastest 'something is wrong' signal — usually arrives before metrics-based alerts fire.",
       "title": "Log Type Rate",
       "type": "timeseries"
     },
@@ -967,7 +1516,7 @@
         "h": 9,
         "w": 18,
         "x": 6,
-        "y": 21
+        "y": 44
       },
       "id": 2,
       "options": {
@@ -992,13 +1541,18 @@
           "refId": "A"
         }
       ],
+      "description": "Live tail of structured logs from all 3 app containers, parsed into columns (timestamp, level, logger, file:line, trace_id, span_id, service, message). Use $log_keyword to filter; trace_id is a derived field — click it to jump straight to the matching trace in VictoriaTraces.",
       "title": "Log of All FastAPI App",
       "type": "logs"
     }
   ],
   "refresh": "5s",
   "schemaVersion": 39,
-  "tags": [],
+  "tags": [
+    "RED",
+    "domain",
+    "fastapi"
+  ],
   "templating": {
     "list": [
       {
