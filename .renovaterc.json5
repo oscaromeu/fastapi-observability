@@ -62,6 +62,24 @@
       addLabels: ["renovate/python"],
     },
     {
+      // OTel contrib packages (instrumentation, distro, propagators) ship as
+      // 0.NbN PEP-440 betas — Renovate treats those as unstable by default and
+      // skips them, leaving them stuck while api/sdk/exporter (1.X.Y) bump.
+      // Opt them back in here.
+      description: "OpenTelemetry contrib uses 0.NbN (beta) — treat as stable",
+      matchPackageNames: ["/^opentelemetry-/"],
+      ignoreUnstable: false,
+      respectLatest: false,
+    },
+    {
+      // OTel api/sdk/exporters (1.X) and contrib (0.NbN) are tightly coupled:
+      // a single exporter version pairs with a specific contrib release.
+      // Bumping them together avoids pip ResolutionImpossible at build time.
+      description: "OpenTelemetry packages bumped together",
+      groupName: "opentelemetry",
+      matchPackageNames: ["/^opentelemetry-/"],
+    },
+    {
       matchManagers: ["github-actions"],
       semanticCommitType: "ci",
       semanticCommitScope: "github-action",
