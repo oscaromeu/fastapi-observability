@@ -13,7 +13,7 @@ export const options = {
 };
 
 const servers = ["http://localhost:8000", "http://localhost:8001", "http://localhost:8002"];
-const endpoints = ["/", "/items/42?q=test", "/io_task", "/cpu_task", "/random_status", "/random_sleep", "/chain", "/error_test"];
+const endpoints = ["/", "/products/42?q=test", "/charge_card", "/calculate_tax", "/random_status", "/random_sleep", "/checkout", "/error_test"];
 
 export default function () {
   for (const server of servers) {

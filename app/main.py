@@ -12,12 +12,12 @@ from fastapi import FastAPI, Request, Response
 from opentelemetry.propagate import inject
 
 from business_metrics import (
-    CHAIN_CALLS,
-    CHAIN_DURATION,
-    CHAIN_IN_PROGRESS,
-    ITEMS_LOOKUP,
-    TASKS_FINISHED,
-    item_bucket,
+    CHECKOUT_DURATION,
+    CHECKOUTS_IN_PROGRESS,
+    CHECKOUTS_TOTAL,
+    JOBS_FINISHED,
+    PRODUCT_VIEWS,
+    price_tier,
     trace_id_exemplar,
 )
 from telemetry import PrometheusMiddleware, metrics, setting_otlp
@@ -29,11 +29,16 @@ OTLP_GRPC_ENDPOINT = os.environ.get("OTLP_GRPC_ENDPOINT", "http://otel-collector
 TARGET_ONE_HOST = os.environ.get("TARGET_ONE_HOST", "app-b")
 TARGET_TWO_HOST = os.environ.get("TARGET_TWO_HOST", "app-c")
 
+# Chaos injection for /checkout. Defaults to 0.0 (no synthetic failures).
+# Set CHECKOUT_ERROR_RATE=0.05 to make ~5% of /checkout calls raise on
+# purpose, so the "Checkout Error Ratio" panel shows real data during demos.
+CHECKOUT_ERROR_RATE = float(os.environ.get("CHECKOUT_ERROR_RATE", "0.0"))
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Single httpx.AsyncClient shared across requests — enables connection
-    # pooling instead of opening fresh sockets per call in /chain.
+    # pooling instead of opening fresh sockets per call in /checkout.
     async with httpx.AsyncClient() as client:
         app.state.httpx = client
         yield
@@ -65,28 +70,30 @@ async def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/items/{item_id}")
-async def read_item(item_id: int, q: Optional[str] = None):
-    ITEMS_LOOKUP.labels(app_name=APP_NAME, bucket=item_bucket(item_id)).inc()
-    logging.info("items")
-    return {"item_id": item_id, "q": q}
+@app.get("/products/{product_id}")
+async def read_product(product_id: int, q: Optional[str] = None):
+    PRODUCT_VIEWS.labels(app_name=APP_NAME, tier=price_tier(product_id)).inc()
+    logging.info("product view")
+    return {"product_id": product_id, "q": q}
 
 
-@app.get("/io_task")
-async def io_task():
+@app.get("/charge_card")
+async def charge_card():
+    # I/O-bound: simulate calling the payment provider over the network.
     await asyncio.sleep(1)
-    TASKS_FINISHED.labels(app_name=APP_NAME, task_type="io").inc()
-    logging.info("io task")
-    return "IO bound task finish!"
+    JOBS_FINISHED.labels(app_name=APP_NAME, job_type="charge").inc()
+    logging.info("charge_card job finished")
+    return "Card charged!"
 
 
-@app.get("/cpu_task")
-async def cpu_task():
+@app.get("/calculate_tax")
+async def calculate_tax():
+    # CPU-bound: simulate computing tax / discounts on the basket.
     for i in range(1000):
         _ = i * i * i
-    TASKS_FINISHED.labels(app_name=APP_NAME, task_type="cpu").inc()
-    logging.info("cpu task")
-    return "CPU bound task finish!"
+    JOBS_FINISHED.labels(app_name=APP_NAME, job_type="tax").inc()
+    logging.info("calculate_tax job finished")
+    return "Tax calculated!"
 
 
 @app.get("/random_status")
@@ -109,29 +116,31 @@ async def error_test(response: Response):
     raise ValueError("value error")
 
 
-@app.get("/chain")
-async def chain(request: Request):
+@app.get("/checkout")
+async def checkout(request: Request):
     headers: dict = {}
     inject(headers)  # inject trace info to header
-    logging.info("chain headers: %s", headers)
+    logging.info("checkout headers: %s", headers)
 
-    CHAIN_IN_PROGRESS.labels(app_name=APP_NAME).inc()
+    CHECKOUTS_IN_PROGRESS.labels(app_name=APP_NAME).inc()
     start = time.perf_counter()
     outcome = "success"
     try:
+        if CHECKOUT_ERROR_RATE > 0 and random.random() < CHECKOUT_ERROR_RATE:
+            raise RuntimeError("synthetic checkout failure (CHECKOUT_ERROR_RATE)")
         client: httpx.AsyncClient = request.app.state.httpx
         await client.get("http://localhost:8000/", headers=headers)
-        await client.get(f"http://{TARGET_ONE_HOST}:8000/io_task", headers=headers)
-        await client.get(f"http://{TARGET_TWO_HOST}:8000/cpu_task", headers=headers)
-        logging.info("Chain Finished")
-        return {"path": "/chain"}
+        await client.get(f"http://{TARGET_ONE_HOST}:8000/charge_card", headers=headers)
+        await client.get(f"http://{TARGET_TWO_HOST}:8000/calculate_tax", headers=headers)
+        logging.info("checkout finished")
+        return {"path": "/checkout"}
     except Exception:
         outcome = "error"
         raise
     finally:
-        CHAIN_IN_PROGRESS.labels(app_name=APP_NAME).dec()
-        CHAIN_CALLS.labels(app_name=APP_NAME, outcome=outcome).inc()
-        CHAIN_DURATION.labels(app_name=APP_NAME).observe(
+        CHECKOUTS_IN_PROGRESS.labels(app_name=APP_NAME).dec()
+        CHECKOUTS_TOTAL.labels(app_name=APP_NAME, outcome=outcome).inc()
+        CHECKOUT_DURATION.labels(app_name=APP_NAME).observe(
             time.perf_counter() - start, exemplar=trace_id_exemplar()
         )
 

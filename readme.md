@@ -96,7 +96,7 @@ Get Trace ID from log (regex derived field in VictoriaLogs data source), then qu
 
 ### FastAPI Application
 
-For a more complex scenario, we use three FastAPI applications with the same code in this demo. There is a cross-service action in `/chain` endpoint, which provides a good example of how to use OpenTelemetry SDK and how Grafana presents trace information.
+For a more complex scenario, we use three FastAPI applications with the same code in this demo. The toy domain is a tiny e-commerce shop: a `/checkout` endpoint that calls `/charge_card` (I/O-bound payment) and `/calculate_tax` (CPU-bound math) on sibling instances. This cross-service action provides a good example of how to use OpenTelemetry SDK and how Grafana presents trace information.
 
 #### Traces and Logs
 
@@ -143,20 +143,17 @@ If you want other services to use the same Trace ID, you have to use `inject` fu
 
 from opentelemetry.propagate import inject
 
-@app.get("/chain")
-async def chain(response: Response):
-
+@app.get("/checkout")
+async def checkout(request: Request):
     headers = {}
     inject(headers)  # inject trace info to header
 
-    async with httpx.AsyncClient() as client:
-        await client.get(f"http://localhost:8000/", headers=headers,)
-    async with httpx.AsyncClient() as client:
-        await client.get(f"http://{TARGET_ONE_HOST}:8000/io_task", headers=headers,)
-    async with httpx.AsyncClient() as client:
-        await client.get(f"http://{TARGET_TWO_HOST}:8000/cpu_task", headers=headers,)
+    client: httpx.AsyncClient = request.app.state.httpx
+    await client.get("http://localhost:8000/", headers=headers)
+    await client.get(f"http://{TARGET_ONE_HOST}:8000/charge_card", headers=headers)
+    await client.get(f"http://{TARGET_TWO_HOST}:8000/calculate_tax", headers=headers)
 
-    return {"path": "/chain"}
+    return {"path": "/checkout"}
 ```
 
 #### Metrics
