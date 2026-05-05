@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import random
+import time
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -9,7 +10,17 @@ import httpx
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from opentelemetry.propagate import inject
-from utils import PrometheusMiddleware, metrics, setting_otlp
+
+from business_metrics import (
+    CHAIN_CALLS,
+    CHAIN_DURATION,
+    CHAIN_IN_PROGRESS,
+    ITEMS_LOOKUP,
+    TASKS_FINISHED,
+    item_bucket,
+    trace_id_exemplar,
+)
+from telemetry import PrometheusMiddleware, metrics, setting_otlp
 
 APP_NAME = os.environ.get("APP_NAME", "app")
 EXPOSE_PORT = os.environ.get("EXPOSE_PORT", 8000)
@@ -56,6 +67,7 @@ async def read_root():
 
 @app.get("/items/{item_id}")
 async def read_item(item_id: int, q: Optional[str] = None):
+    ITEMS_LOOKUP.labels(app_name=APP_NAME, bucket=item_bucket(item_id)).inc()
     logging.info("items")
     return {"item_id": item_id, "q": q}
 
@@ -63,6 +75,7 @@ async def read_item(item_id: int, q: Optional[str] = None):
 @app.get("/io_task")
 async def io_task():
     await asyncio.sleep(1)
+    TASKS_FINISHED.labels(app_name=APP_NAME, task_type="io").inc()
     logging.info("io task")
     return "IO bound task finish!"
 
@@ -71,6 +84,7 @@ async def io_task():
 async def cpu_task():
     for i in range(1000):
         _ = i * i * i
+    TASKS_FINISHED.labels(app_name=APP_NAME, task_type="cpu").inc()
     logging.info("cpu task")
     return "CPU bound task finish!"
 
@@ -101,12 +115,25 @@ async def chain(request: Request):
     inject(headers)  # inject trace info to header
     logging.info("chain headers: %s", headers)
 
-    client: httpx.AsyncClient = request.app.state.httpx
-    await client.get("http://localhost:8000/", headers=headers)
-    await client.get(f"http://{TARGET_ONE_HOST}:8000/io_task", headers=headers)
-    await client.get(f"http://{TARGET_TWO_HOST}:8000/cpu_task", headers=headers)
-    logging.info("Chain Finished")
-    return {"path": "/chain"}
+    CHAIN_IN_PROGRESS.labels(app_name=APP_NAME).inc()
+    start = time.perf_counter()
+    outcome = "success"
+    try:
+        client: httpx.AsyncClient = request.app.state.httpx
+        await client.get("http://localhost:8000/", headers=headers)
+        await client.get(f"http://{TARGET_ONE_HOST}:8000/io_task", headers=headers)
+        await client.get(f"http://{TARGET_TWO_HOST}:8000/cpu_task", headers=headers)
+        logging.info("Chain Finished")
+        return {"path": "/chain"}
+    except Exception:
+        outcome = "error"
+        raise
+    finally:
+        CHAIN_IN_PROGRESS.labels(app_name=APP_NAME).dec()
+        CHAIN_CALLS.labels(app_name=APP_NAME, outcome=outcome).inc()
+        CHAIN_DURATION.labels(app_name=APP_NAME).observe(
+            time.perf_counter() - start, exemplar=trace_id_exemplar()
+        )
 
 
 if __name__ == "__main__":
