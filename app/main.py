@@ -2,11 +2,12 @@ import asyncio
 import logging
 import os
 import random
+from contextlib import asynccontextmanager
 from typing import Optional
 
 import httpx
 import uvicorn
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Request, Response
 from opentelemetry.propagate import inject
 from utils import PrometheusMiddleware, metrics, setting_otlp
 
@@ -17,7 +18,17 @@ OTLP_GRPC_ENDPOINT = os.environ.get("OTLP_GRPC_ENDPOINT", "http://otel-collector
 TARGET_ONE_HOST = os.environ.get("TARGET_ONE_HOST", "app-b")
 TARGET_TWO_HOST = os.environ.get("TARGET_TWO_HOST", "app-c")
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Single httpx.AsyncClient shared across requests — enables connection
+    # pooling instead of opening fresh sockets per call in /chain.
+    async with httpx.AsyncClient() as client:
+        app.state.httpx = client
+        yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 # Setting metrics middleware
 app.add_middleware(PrometheusMiddleware, app_name=APP_NAME)
@@ -85,26 +96,15 @@ async def error_test(response: Response):
 
 
 @app.get("/chain")
-async def chain(response: Response):
-    headers = {}
+async def chain(request: Request):
+    headers: dict = {}
     inject(headers)  # inject trace info to header
     logging.info("chain headers: %s", headers)
 
-    async with httpx.AsyncClient() as client:
-        await client.get(
-            "http://localhost:8000/",
-            headers=headers,
-        )
-    async with httpx.AsyncClient() as client:
-        await client.get(
-            f"http://{TARGET_ONE_HOST}:8000/io_task",
-            headers=headers,
-        )
-    async with httpx.AsyncClient() as client:
-        await client.get(
-            f"http://{TARGET_TWO_HOST}:8000/cpu_task",
-            headers=headers,
-        )
+    client: httpx.AsyncClient = request.app.state.httpx
+    await client.get("http://localhost:8000/", headers=headers)
+    await client.get(f"http://{TARGET_ONE_HOST}:8000/io_task", headers=headers)
+    await client.get(f"http://{TARGET_TWO_HOST}:8000/cpu_task", headers=headers)
     logging.info("Chain Finished")
     return {"path": "/chain"}
 
