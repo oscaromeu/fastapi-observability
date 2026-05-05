@@ -1,6 +1,6 @@
 httpx==0.28.1
 fastapi==0.136.1
-uvicorn==0.29.0
+uvicorn==0.46.0
 prometheus-client==0.25.0
 opentelemetry-distro==0.45b0
 opentelemetry-instrumentation-fastapi==0.45b0
