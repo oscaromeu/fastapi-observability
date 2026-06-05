@@ -2,7 +2,7 @@ httpx==0.28.1
 fastapi==0.136.1
 uvicorn==0.46.0
 prometheus-client==0.25.0
-opentelemetry-distro==0.62b1
-opentelemetry-instrumentation-fastapi==0.62b1
-opentelemetry-instrumentation-logging==0.62b1
-opentelemetry-exporter-otlp==1.41.1
+opentelemetry-distro==0.63b1
+opentelemetry-instrumentation-fastapi==0.63b1
+opentelemetry-instrumentation-logging==0.63b1
+opentelemetry-exporter-otlp==1.42.1
