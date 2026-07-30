@@ -29,7 +29,7 @@ services:
       - victoria-logs
 
   victoria-traces:
-    image: victoriametrics/victoria-traces:v0.8.2@sha256:0acb761e60ce86e7b83e5e9f8648421004ea922c5bf1e0755d0346536d747eea
+    image: victoriametrics/victoria-traces:v0.10.0@sha256:66e784a595c4a88e5b1dfab5d153dea442cf1caaeae4d67839c550414c33b3b0
     command:
       - -storageDataPath=/vtraces
       - -loggerFormat=json
