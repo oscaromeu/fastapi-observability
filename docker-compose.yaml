@@ -107,7 +107,7 @@ services:
     logging: *default-logging
 
   grafana:
-    image: grafana/grafana:13.0.1@sha256:0f86bada30d65ef9d0183b90c1e2682ac92d53d95da8bed322b984ea78a4a73a
+    image: grafana/grafana:13.2.2@sha256:ac461fb352abc50da10a51c7d02462e9c05488f11f53f14b3ad79a8145f638a0
     ports:
       - "3000:3000"
     environment:
