@@ -18,7 +18,7 @@ services:
       - victoria-logs-data:/vlogs
 
   fluentbit:
-    image: cr.fluentbit.io/fluent/fluent-bit:5.0.4@sha256:7b4cc81b02155855337f7184e128fc078fd9d6240d99236285233de931b9a929
+    image: cr.fluentbit.io/fluent/fluent-bit:5.1.4@sha256:a9cc9627aeabb8bb33077ee85b6ec8c0fe40aff8e7000bb4e8cd924511fa626c
     command:
       - --config=/fluent-bit/etc/fluent-bit.yaml
     ports:
