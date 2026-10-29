@@ -56,7 +56,7 @@ services:
 
   app-a:
     # build: ./fastapi_app/
-    image: ghcr.io/oscaromeu/fastapi-observability/app:0.1.0@sha256:f087c724a0232efae75cda2fb3f1dfb5b2b4b61f0f8d667336855b123af11938
+    image: ghcr.io/oscaromeu/fastapi-observability/app:0.2.1@sha256:4e06c8a7c14efa8f5f5bb910da158c1e411408884cc92db27d4f41db44c42a4e
     ports:
       - "8000:8000"
     depends_on:
@@ -69,7 +69,7 @@ services:
 
   app-b:
     # build: ./fastapi_app/
-    image: ghcr.io/oscaromeu/fastapi-observability/app:0.1.0@sha256:f087c724a0232efae75cda2fb3f1dfb5b2b4b61f0f8d667336855b123af11938
+    image: ghcr.io/oscaromeu/fastapi-observability/app:0.2.1@sha256:4e06c8a7c14efa8f5f5bb910da158c1e411408884cc92db27d4f41db44c42a4e
     ports:
       - "8001:8000"
     depends_on:
@@ -82,7 +82,7 @@ services:
 
   app-c:
     # build: ./fastapi_app/
-    image: ghcr.io/oscaromeu/fastapi-observability/app:0.1.0@sha256:f087c724a0232efae75cda2fb3f1dfb5b2b4b61f0f8d667336855b123af11938
+    image: ghcr.io/oscaromeu/fastapi-observability/app:0.2.1@sha256:4e06c8a7c14efa8f5f5bb910da158c1e411408884cc92db27d4f41db44c42a4e
     ports:
       - "8002:8000"
     depends_on:
