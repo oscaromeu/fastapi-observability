@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.15-slim
 
 # Install deps in a separate layer that only invalidates when requirements.txt
 # changes — code edits no longer rebuild pip install.
