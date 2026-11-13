@@ -7,7 +7,7 @@ x-logging: &default-logging
 
 services:
   victoria-logs:
-    image: victoriametrics/victoria-logs:v1.50.0@sha256:ae9bea8d8a3b0fc47c7f0058bcca410e79c84b4a0acd12d4dac71b9302526590
+    image: victoriametrics/victoria-logs:v1.54.0@sha256:ee4e820cac3721f5f5d91641b950c22439593adc4224f9655e5333d5a84c1dfe
     command:
       - -storageDataPath=/vlogs
       - -loggerFormat=json
